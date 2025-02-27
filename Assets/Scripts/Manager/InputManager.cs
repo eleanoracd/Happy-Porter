@@ -5,7 +5,9 @@ public class InputManager : MonoBehaviour
 {
     private PlayerInputActions _playerInputActions;
 
-    public Vector2 MoveInput { get; private set; }
+    public Vector2 RawMoveInput { get; private set; }
+    public int NormalizeInputX { get; private set; }
+    public int NormalizeInputY { get; private set; }
     public bool IsJumping { get; private set; }
     public bool IsRunning { get; private set; }
     public bool IsInteract { get; private set; }
@@ -41,12 +43,18 @@ public class InputManager : MonoBehaviour
 
     private void OnMove(InputAction.CallbackContext context)
     {
-        MoveInput = context.ReadValue<Vector2>();
+        RawMoveInput = context.ReadValue<Vector2>();
+
+        NormalizeInputX = (int)(RawMoveInput * Vector2.right).normalized.x;
+        NormalizeInputY = (int)(RawMoveInput * Vector2.up).normalized.y;
     }
 
     private void OnJump(InputAction.CallbackContext context)
     {
-        IsJumping = context.performed;
+        if (context.started)
+        {
+            IsJumping = true;
+        }
     }
 
     private void OnRun(InputAction.CallbackContext context)
