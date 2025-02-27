@@ -11,10 +11,20 @@ public class InputManager : MonoBehaviour
     public bool IsJumping { get; private set; }
     public bool IsRunning { get; private set; }
     public bool IsInteract { get; private set; }
+    public bool JumpInputStop { get; private set; }
+
+    [SerializeField] private float inputHoldTime = 0.2f;
+
+    private float jumpInputStartTime;
 
     private void Awake()
     {
         _playerInputActions = new PlayerInputActions();   
+    }
+
+    private void Update()
+    {
+        CheckJumpInputHoldTime();
     }
 
     private void OnEnable()
@@ -51,9 +61,16 @@ public class InputManager : MonoBehaviour
 
     private void OnJump(InputAction.CallbackContext context)
     {
-        if (context.started)
+        if (context.performed)
         {
             IsJumping = true;
+            JumpInputStop = false;
+            jumpInputStartTime = Time.time;
+        }
+
+        if (context.canceled)
+        {
+            JumpInputStop = true;
         }
     }
 
@@ -65,5 +82,15 @@ public class InputManager : MonoBehaviour
     private void OnInteract(InputAction.CallbackContext context)
     {
         IsInteract = context.performed;
+    }
+
+    public void UseJump() => IsJumping = false;
+
+    private void CheckJumpInputHoldTime()
+    {
+        if(Time.time >= jumpInputStartTime + inputHoldTime)
+        {
+            IsJumping = false;
+        }
     }
 }
