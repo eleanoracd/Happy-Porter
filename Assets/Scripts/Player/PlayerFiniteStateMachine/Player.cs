@@ -12,6 +12,10 @@ public class Player : MonoBehaviour
     public PlayerLandState LandState { get; private set; }
     public PlayerJumpState JumpState { get; private set; }
     public PlayerInAirState InAirState { get; private set; }
+    public PlayerWallClimbState WallClimbState { get; private set; }
+    public PlayerWallGrabState WallGrabState { get; private set; }
+    public PlayerWallSlideState WallSlideState { get; private set; }
+    public PlayerWallJumpState WallJumpState { get; private set; }
 
     [SerializeField] private PlayerData playerData;
     #endregion
@@ -24,6 +28,7 @@ public class Player : MonoBehaviour
 
     #region Check Transform
     [SerializeField] private Transform groundCheck;
+    [SerializeField] private Transform wallCheck;
 
     #endregion
 
@@ -37,6 +42,9 @@ public class Player : MonoBehaviour
     private const string MOVE = "move";
     private const string INAIR = "inAir";
     private const string LAND = "land";
+    private const string WALLSLIDE = "wallSlide";
+    private const string WALLCLIMB = "wallClimb";
+    private const string WALLGRAB = "wallGrab";
     #endregion
 
     #region Unity CallBack Functions
@@ -49,6 +57,10 @@ public class Player : MonoBehaviour
         JumpState = new PlayerJumpState(this, StateMachine, playerData,  INAIR);
         InAirState = new PlayerInAirState(this, StateMachine, playerData,  INAIR);
         LandState = new PlayerLandState(this, StateMachine, playerData,  LAND);
+        WallSlideState = new PlayerWallSlideState(this, StateMachine, playerData, WALLSLIDE);
+        WallGrabState = new PlayerWallGrabState(this, StateMachine, playerData, WALLGRAB);
+        WallClimbState = new PlayerWallClimbState(this, StateMachine, playerData, WALLCLIMB);
+        WallJumpState = new PlayerWallJumpState(this, StateMachine, playerData, INAIR);
     }
 
     private void Start()
@@ -75,6 +87,14 @@ public class Player : MonoBehaviour
     #endregion
 
     #region  Set Functions
+    public void SetVelocity(float velocity, Vector2 angle, int direction)
+    {
+        angle.Normalize();
+        workspace.Set(angle.x * velocity * direction, angle.y * velocity);
+        RigidBody.velocity = workspace;
+        CurrentVelocity = workspace;
+    }
+
     public void SetVelocityX(float velocity)
     {
         workspace.Set(velocity, CurrentVelocity.y);
@@ -94,6 +114,16 @@ public class Player : MonoBehaviour
     public bool CheckIfGrounded()
     {
         return Physics2D.OverlapCircle(groundCheck.position, playerData.groundCheckRadius, playerData.whatIsGround);
+    }
+
+    public bool CheckIfTouchingWall()
+    {
+        return Physics2D.Raycast(wallCheck.position, Vector2.right * FacingDirection, playerData.wallCheckDistance, playerData.whatIsGround);
+    }
+
+    public bool CheckIfTouchingWallBack()
+    {
+        return Physics2D.Raycast(wallCheck.position, Vector2.right * -FacingDirection, playerData.wallCheckDistance, playerData.whatIsGround);
     }
 
     public void CheckIfShouldFlip(int xInput)

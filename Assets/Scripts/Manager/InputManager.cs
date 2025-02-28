@@ -12,6 +12,7 @@ public class InputManager : MonoBehaviour
     public bool IsRunning { get; private set; }
     public bool IsInteract { get; private set; }
     public bool JumpInputStop { get; private set; }
+    public bool GrabInput { get; private set; }
 
     [SerializeField] private float inputHoldTime = 0.2f;
 
@@ -36,6 +37,8 @@ public class InputManager : MonoBehaviour
         _playerInputActions.Player.Jump.canceled += OnJump;
         _playerInputActions.Player.Run.performed += OnRun;
         _playerInputActions.Player.Run.canceled += OnRun;
+        _playerInputActions.Player.Grab.performed += OnGrab;
+        _playerInputActions.Player.Grab.canceled += OnGrab;
         _playerInputActions.Player.Interact.performed += OnInteract;
     }
 
@@ -47,6 +50,8 @@ public class InputManager : MonoBehaviour
         _playerInputActions.Player.Jump.canceled -= OnJump;
         _playerInputActions.Player.Run.performed -= OnRun;
         _playerInputActions.Player.Run.canceled -= OnRun;
+        _playerInputActions.Player.Grab.performed -= OnGrab;
+        _playerInputActions.Player.Grab.canceled -= OnGrab;
         _playerInputActions.Player.Interact.performed -= OnInteract;
         _playerInputActions.Player.Disable();
     }
@@ -55,8 +60,23 @@ public class InputManager : MonoBehaviour
     {
         RawMoveInput = context.ReadValue<Vector2>();
 
-        NormalizeInputX = (int)(RawMoveInput * Vector2.right).normalized.x;
-        NormalizeInputY = (int)(RawMoveInput * Vector2.up).normalized.y;
+        if(Mathf.Abs(RawMoveInput.x) > 0.5f)
+        {
+            NormalizeInputX = (int)(RawMoveInput * Vector2.right).normalized.x;
+        }
+        else
+        {
+            NormalizeInputX = 0;
+        }
+
+        if(Mathf.Abs(RawMoveInput.y) > 0.5f)
+        {
+            NormalizeInputY = (int)(RawMoveInput * Vector2.up).normalized.y;
+        }
+        else
+        {
+            NormalizeInputY = 0;
+        }
     }
 
     private void OnJump(InputAction.CallbackContext context)
@@ -71,6 +91,19 @@ public class InputManager : MonoBehaviour
         if (context.canceled)
         {
             JumpInputStop = true;
+        }
+    }
+
+    private void OnGrab(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            GrabInput = true;
+        }
+        
+        if(context.canceled)
+        {
+            GrabInput = false;
         }
     }
 
