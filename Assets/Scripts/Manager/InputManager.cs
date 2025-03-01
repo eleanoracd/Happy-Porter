@@ -4,8 +4,13 @@ using UnityEngine.InputSystem;
 public class InputManager : MonoBehaviour
 {
     private PlayerInputActions _playerInputActions;
+    private PlayerInput playerInput;
+    private Camera cam;
+
 
     public Vector2 RawMoveInput { get; private set; }
+    public Vector2 RawDashDirectionInput { get; private set; }
+    public Vector2Int DashDirectionInput { get; private set; }
     public int NormalizeInputX { get; private set; }
     public int NormalizeInputY { get; private set; }
     public bool IsJumping { get; private set; }
@@ -13,19 +18,29 @@ public class InputManager : MonoBehaviour
     public bool IsInteract { get; private set; }
     public bool JumpInputStop { get; private set; }
     public bool GrabInput { get; private set; }
+    public bool DashInput { get; private set; }
+    public bool DashInputStop { get; private set; }
 
     [SerializeField] private float inputHoldTime = 0.2f;
 
     private float jumpInputStartTime;
+    private float dashInputStartTime;
 
     private void Awake()
     {
         _playerInputActions = new PlayerInputActions();   
     }
 
+    private void Start()
+    {
+       playerInput = GetComponent<PlayerInput>();
+       cam = Camera.main;
+    }
+
     private void Update()
     {
         CheckJumpInputHoldTime();
+        CheckDashInputHoldTime();
     }
 
     private void OnEnable()
@@ -39,6 +54,10 @@ public class InputManager : MonoBehaviour
         _playerInputActions.Player.Run.canceled += OnRun;
         _playerInputActions.Player.Grab.performed += OnGrab;
         _playerInputActions.Player.Grab.canceled += OnGrab;
+        _playerInputActions.Player.Dash.performed += OnDash;
+        _playerInputActions.Player.Dash.canceled += OnDash;
+        _playerInputActions.Player.DashDirection.performed += OnDashDirectionInput;
+        _playerInputActions.Player.DashDirection.canceled += OnDashDirectionInput;
         _playerInputActions.Player.Interact.performed += OnInteract;
     }
 
@@ -52,6 +71,10 @@ public class InputManager : MonoBehaviour
         _playerInputActions.Player.Run.canceled -= OnRun;
         _playerInputActions.Player.Grab.performed -= OnGrab;
         _playerInputActions.Player.Grab.canceled -= OnGrab;
+        _playerInputActions.Player.Dash.performed -= OnDash;
+        _playerInputActions.Player.Dash.canceled -= OnDash;
+        _playerInputActions.Player.DashDirection.performed -= OnDashDirectionInput;
+        _playerInputActions.Player.DashDirection.canceled -= OnDashDirectionInput;
         _playerInputActions.Player.Interact.performed -= OnInteract;
         _playerInputActions.Player.Disable();
     }
@@ -107,6 +130,33 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    private void OnDash(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            DashInput = true;
+            DashInputStop = false;
+            dashInputStartTime = Time.time;
+        }
+
+        else if(context.canceled)
+        {
+            DashInputStop = true;
+        }
+    }
+
+    private void OnDashDirectionInput(InputAction.CallbackContext context)
+    {
+        RawDashDirectionInput = context.ReadValue<Vector2>();
+
+        if(playerInput.currentControlScheme == "Keyboard")
+        {
+            RawDashDirectionInput = cam.ScreenToWorldPoint((Vector3)RawDashDirectionInput) - transform.position;
+        }
+
+        DashDirectionInput = Vector2Int.RoundToInt(RawDashDirectionInput.normalized);
+    }
+
     private void OnRun(InputAction.CallbackContext context)
     {
         IsRunning = context.performed;
@@ -119,11 +169,21 @@ public class InputManager : MonoBehaviour
 
     public void UseJump() => IsJumping = false;
 
+    public void UseDash() => DashInput = false;
+
     private void CheckJumpInputHoldTime()
     {
         if(Time.time >= jumpInputStartTime + inputHoldTime)
         {
             IsJumping = false;
+        }
+    }
+
+    private void CheckDashInputHoldTime()
+    {
+        if(Time.time >= dashInputStartTime + inputHoldTime)
+        {
+            DashInput = false;
         }
     }
 }
