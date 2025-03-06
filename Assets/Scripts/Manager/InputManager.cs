@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,6 +22,8 @@ public class InputManager : MonoBehaviour
     public bool DashInput { get; private set; }
     public bool DashInputStop { get; private set; }
 
+    public bool[] AttackInputs { get; private set; }
+
     [SerializeField] private float inputHoldTime = 0.2f;
 
     private float jumpInputStartTime;
@@ -34,6 +37,10 @@ public class InputManager : MonoBehaviour
     private void Start()
     {
        playerInput = GetComponent<PlayerInput>();
+
+       int count = Enum.GetValues(typeof(CombatInputs)).Length;
+       AttackInputs = new bool[count];
+
        cam = Camera.main;
     }
 
@@ -58,6 +65,10 @@ public class InputManager : MonoBehaviour
         _playerInputActions.Player.Dash.canceled += OnDash;
         _playerInputActions.Player.DashDirection.performed += OnDashDirectionInput;
         _playerInputActions.Player.DashDirection.canceled += OnDashDirectionInput;
+        _playerInputActions.Player.PrimaryAttack.performed += OnPrimaryAttackInput;
+        _playerInputActions.Player.PrimaryAttack.canceled += OnPrimaryAttackInput;
+        _playerInputActions.Player.SecondaryAttack.performed += OnSecondaryAttackInput;
+        _playerInputActions.Player.SecondaryAttack.canceled += OnSecondaryAttackInput;
         _playerInputActions.Player.Interact.performed += OnInteract;
     }
 
@@ -75,31 +86,46 @@ public class InputManager : MonoBehaviour
         _playerInputActions.Player.Dash.canceled -= OnDash;
         _playerInputActions.Player.DashDirection.performed -= OnDashDirectionInput;
         _playerInputActions.Player.DashDirection.canceled -= OnDashDirectionInput;
+        _playerInputActions.Player.PrimaryAttack.performed -= OnPrimaryAttackInput;
+        _playerInputActions.Player.PrimaryAttack.canceled -= OnPrimaryAttackInput;
+        _playerInputActions.Player.SecondaryAttack.performed -= OnSecondaryAttackInput;
+        _playerInputActions.Player.SecondaryAttack.canceled -= OnSecondaryAttackInput;
         _playerInputActions.Player.Interact.performed -= OnInteract;
         _playerInputActions.Player.Disable();
+    }
+
+    private void OnPrimaryAttackInput(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            AttackInputs[(int)CombatInputs.primary] = true;
+        }
+
+        if(context.canceled)
+        {
+            AttackInputs[(int)CombatInputs.primary] = false;
+        }
+    }
+
+    private void OnSecondaryAttackInput(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            AttackInputs[(int)CombatInputs.secondary] = true;
+        }
+
+        if(context.canceled)
+        {
+            AttackInputs[(int)CombatInputs.secondary] = false;
+        }
     }
 
     private void OnMove(InputAction.CallbackContext context)
     {
         RawMoveInput = context.ReadValue<Vector2>();
 
-        if(Mathf.Abs(RawMoveInput.x) > 0.5f)
-        {
-            NormalizeInputX = (int)(RawMoveInput * Vector2.right).normalized.x;
-        }
-        else
-        {
-            NormalizeInputX = 0;
-        }
-
-        if(Mathf.Abs(RawMoveInput.y) > 0.5f)
-        {
-            NormalizeInputY = (int)(RawMoveInput * Vector2.up).normalized.y;
-        }
-        else
-        {
-            NormalizeInputY = 0;
-        }
+        NormalizeInputX = Mathf.RoundToInt(RawMoveInput.x);
+        NormalizeInputX = Mathf.RoundToInt(RawMoveInput.y);
     }
 
     private void OnJump(InputAction.CallbackContext context)
@@ -186,4 +212,10 @@ public class InputManager : MonoBehaviour
             DashInput = false;
         }
     }
+}
+
+public enum CombatInputs
+{
+    primary,
+    secondary,
 }
