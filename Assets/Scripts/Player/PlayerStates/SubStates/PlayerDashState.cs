@@ -86,6 +86,7 @@ public class PlayerDashState : PlayerAbilityState
                 if(Time.time >= startTime + playerData.dashTime)
                 {
                     player.RigidBody.drag = 0f;
+                    player.SetVelocityX(0f);
                     isAbilityDone = true;
                     lashDashtime = Time.time;
                 }
@@ -112,5 +113,12 @@ public class PlayerDashState : PlayerAbilityState
         return CanDash && Time.time >= lashDashtime + playerData.dashCooldown;
     }
 
-    public void ResetCanDash() => CanDash = true;
+    public void ResetCanDash()
+    {
+        CanDash = true;
+        if (lashDashtime == 0)
+        {
+            lashDashtime = Time.time;
+        }
+    }
 }
