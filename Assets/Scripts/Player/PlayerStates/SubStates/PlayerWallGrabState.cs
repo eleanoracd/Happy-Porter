@@ -63,8 +63,8 @@ public class PlayerWallGrabState : PlayerWallState
     {
         player.transform.position = holdPosition;
 
-        player.SetVelocityX(0f);
-        player.SetVelocityY(0f);
+        core.Movement.SetVelocityX(0f);
+        core.Movement.SetVelocityY(0f);
     }
 
 

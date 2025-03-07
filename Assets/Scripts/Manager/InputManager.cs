@@ -125,7 +125,7 @@ public class InputManager : MonoBehaviour
         RawMoveInput = context.ReadValue<Vector2>();
 
         NormalizeInputX = Mathf.RoundToInt(RawMoveInput.x);
-        NormalizeInputX = Mathf.RoundToInt(RawMoveInput.y);
+        NormalizeInputY = Mathf.RoundToInt(RawMoveInput.y);
     }
 
     private void OnJump(InputAction.CallbackContext context)

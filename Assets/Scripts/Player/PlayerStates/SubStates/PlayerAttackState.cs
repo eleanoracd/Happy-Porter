@@ -6,6 +6,13 @@ public class PlayerAttackState : PlayerAbilityState
 {
     [SerializeField] private Weapon weapon;
 
+    private int xInput;
+
+    private float velocityToSet;
+
+    private bool setVelocity;
+    private bool shouldCheckFlip;
+
     public PlayerAttackState(Player player, PlayerStateMachine stateMachine, PlayerData playerData, string animationBoolName) : base(player, stateMachine, playerData, animationBoolName)
     {
     }
@@ -14,7 +21,27 @@ public class PlayerAttackState : PlayerAbilityState
     {
         base.Enter();
 
+        setVelocity = false;
+
         weapon.EnterWeapon();
+    }
+
+    public override void LogicUpdate()
+    {
+        base.LogicUpdate();
+
+        xInput = player.InputManager.NormalizeInputX;
+
+        if(shouldCheckFlip)
+        {
+            core.Movement.CheckIfShouldFlip(xInput);
+        }
+
+
+        if(setVelocity)
+        {
+           core.Movement.SetVelocityX(velocityToSet * core.Movement.FacingDirection);
+        }
     }
 
     public override void Exit()
@@ -28,6 +55,19 @@ public class PlayerAttackState : PlayerAbilityState
     {
         this.weapon = weapon;
         weapon.InitializeWeapon(this);
+    }
+
+    public void SetPlayerVelocity(float velocity)
+    {
+       core.Movement.SetVelocityX(velocity * core.Movement.FacingDirection);
+
+        velocityToSet = velocity;
+        setVelocity = true;
+    }
+
+    public void SetFlipCheck(bool value)
+    {
+        shouldCheckFlip = value;
     }
 
     #region Animation Triggers
